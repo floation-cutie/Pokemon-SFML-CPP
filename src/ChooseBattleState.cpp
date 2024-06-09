@@ -25,7 +25,7 @@ ChooseBattleState::ChooseBattleState(StateStack &stack, Context context)
       rtPokemon(nullptr), ldPokemon(nullptr), rdPokemon(nullptr), buf(),
       pokemonids() {
   // 先初始化vecotr<id>为0
-  std::cout << "DEBUG:: START CHOOSING\n";
+  // std::cout << "DEBUG:: START CHOOSING\n";
   buf = "getPokemonList\n";
   if (send(connect_sock, buf.c_str(), buf.size(), 0) < 0) {
     std::cerr << "Error writing to server." << std::endl;
@@ -131,8 +131,8 @@ ChooseBattleState::ChooseBattleState(StateStack &stack, Context context)
   DuelFightButton->setText("Duel Fight");
   DuelFightButton->setCallback([=, this]() {
     // 判断PokemonIdInputField中的输入是否在pokemonids中
-    if (std::find(pokemonids.begin(), pokemonids.end(),
-                  std::stoi(PokemonIdInputField->getText())) ==
+    int Pokemonid = isValidNumber(PokemonIdInputField->getText().c_str());
+    if (std::find(pokemonids.begin(), pokemonids.end(), Pokemonid) ==
         pokemonids.end()) {
       hintLabel->setText("The pokemon is not belong to you");
       hintLabel->setColor(sf::Color::Red);
@@ -219,8 +219,8 @@ ChooseBattleState::ChooseBattleState(StateStack &stack, Context context)
   UpgradeFightButton->setText("Upgrade Fight");
   UpgradeFightButton->setCallback([=, this]() {
     // 判断PokemonIdInputField中的输入是否在pokemonids中
-    if (std::find(pokemonids.begin(), pokemonids.end(),
-                  std::stoi(PokemonIdInputField->getText())) ==
+    int Pokemonid = isValidNumber(PokemonIdInputField->getText().c_str());
+    if (std::find(pokemonids.begin(), pokemonids.end(), Pokemonid) ==
         pokemonids.end()) {
       hintLabel->setText("The pokemon is not belong to you");
       hintLabel->setColor(sf::Color::Red);

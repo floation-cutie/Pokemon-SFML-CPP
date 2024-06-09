@@ -29,7 +29,9 @@ class Endpoint {
   bool isDuel;
   int playerID;
   string playerUsername;
-
+  size_t pokemonNumIndex;
+  size_t pokemonLevelIndex;
+  string Honor[3] = {"rookie", "veteran", "master"};
   // about pokemon
   string Name[4] = {"Strengthy", "tanky", "defensive", "agile"};
   // about thread
@@ -51,6 +53,7 @@ class Endpoint {
   void battle(int PokemonID, int enemySpeciesID, int enemyLevel, int autofight);
   string chooseBet();
   void discard(int pokemonID);
+  void getHonor();
   // other functions
   // 新建或者更新
   void savePokemonToDB(shared_ptr<components::spirits::Pokemon> p, int id = -1);

@@ -23,30 +23,11 @@ extern int connect_sock;
 
 // 仿照PauseState的构造函数，实现BattleState的构造函数
 BattleState::BattleState(StateStack &stack, Context context)
-    : State(stack, context), mtextures(), mBattleText(), mGUIContainer(),
+    : State(stack, context), mtextures(), mGUIContainer(),
       leftPlayerPokemon(nullptr), rightEnemyPokemon(nullptr), battle(nullptr),
-      inBattle(true) {
+      inBattle(true), inBattleState(true) {
   loadTextures();
   buildScene();
-  // 从context中获取窗口大小
-  sf::Vector2f windowSize(context.window->getSize());
-
-  // 从context中获取字体
-  sf::Font &font = context.fonts->get(Fonts::Main);
-
-  // 设置mBattleText的字体
-  mBattleText.setFont(font);
-  // 设置mBattleText的字符串
-  mBattleText.setString("Battle");
-  // 设置mBattleText的字符大小
-  mBattleText.setCharacterSize(50);
-  // 获取mBattleText的本地边界
-  sf::FloatRect bounds = mBattleText.getLocalBounds();
-  // 设置mBattleText的原点
-  mBattleText.setOrigin(std::floor(bounds.left + bounds.width / 2.f),
-                        std::floor(bounds.top + bounds.height / 2.f));
-  // 设置mBattleText的位置,设置在窗口最上方，居中
-  mBattleText.setPosition(0.5f * windowSize.x, 0.05f * windowSize.y);
 }
 
 void BattleState::loadTextures() {
@@ -96,7 +77,7 @@ void BattleState::discard() {
     if (strs[0] == "Accept.") {
       discardLabel->setColor(sf::Color::Green);
       discardLabel->setText("Discard successfully!");
-      inBattle = false;
+      inBattleState = false;
     } else {
       discardLabel->setColor(sf::Color::Red);
       discardLabel->setText("Discard failed!");
@@ -187,9 +168,11 @@ void BattleState::buildScene() {
       hintLabel->setColor(sf::Color::Green);
       hintLabel->setText("You win!");
       inBattle = false;
+      inBattleState = false;
     } else if (splits.size() == 1 && splits[0] == "Lose") {
       hintLabel->setColor(sf::Color::Red);
       hintLabel->setText("You lose!");
+      inBattle = false;
       buf = "Lose response\n";
       if (send(connect_sock, buf.c_str(), BUF_LENGTH, 0) < 0) {
         std::cerr << "Error writing to server." << std::endl;
@@ -214,13 +197,12 @@ void BattleState::buildScene() {
           }
           hintLabel->setText(text);
           discard();
-          inBattle = false;
           break;
         } else if (strs[0] == "Upgrade") {
           // do nothing
           hintLabel->setColor(sf::Color::Red);
           hintLabel->setText("You lose!");
-          inBattle = false;
+          inBattleState = false;
           break;
         }
       }
@@ -266,6 +248,7 @@ void BattleState::buildScene() {
       hintLabel->setColor(sf::Color::Green);
       hintLabel->setText("You win!");
       inBattle = false;
+      inBattleState = false;
     } else if (splits.size() == 1 && splits[0] == "Lose") {
       hintLabel->setColor(sf::Color::Red);
       hintLabel->setText("You lose!");
@@ -293,12 +276,11 @@ void BattleState::buildScene() {
         }
         hintLabel->setText(text);
         discard();
-        inBattle = false;
       } else if (strs[0] == "Upgrade") {
         // do nothing
         hintLabel->setColor(sf::Color::Red);
         hintLabel->setText("You lose!");
-        inBattle = false;
+        inBattleState = false;
       }
     } else {
       std::string lastSentence = splits[splits.size() - 1];
@@ -323,7 +305,7 @@ void BattleState::buildScene() {
   backButton->setCallback([=, this]() {
     if (!inBattle && hintLabel->getColor() == sf::Color::Green)
       requestStackPop();
-    else if (!inBattle && hintLabel->getColor() == sf::Color::Red) {
+    else if (!inBattleState && hintLabel->getColor() == sf::Color::Red) {
       requestStackPop();
       // requestStackPush(GameOver);
     } else {
@@ -342,7 +324,6 @@ void BattleState::draw() {
   sf::RenderWindow &window = *getContext().window;
   window.setView(window.getDefaultView());
 
-  window.draw(mBattleText);
   window.draw(mSceneGraph);
   window.draw(mGUIContainer);
 }

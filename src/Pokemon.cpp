@@ -239,7 +239,7 @@ int components::spirits::Pokemon::attack(std::shared_ptr<Pokemon> opptr,
     // find the skill
     if (skillIndex > 0) {
       if (battlePP > 0) {
-        battlePP--; //
+        battlePP--;
       } else {
         skillIndex = 0;
       }
@@ -252,6 +252,7 @@ int components::spirits::Pokemon::attack(std::shared_ptr<Pokemon> opptr,
   } else {
     // manual fight, get skillIndex
 
+    // 当蓝条为0时，返回该攻击蓝条消耗完毕的消息给客户端
     msg = GetName() + ", your turn!\n";
     msg += "Choose a skill to attack!\n";
     // 格式化输出技能和技能描述以及pp值
@@ -264,8 +265,15 @@ int components::spirits::Pokemon::attack(std::shared_ptr<Pokemon> opptr,
         msg += "  PP: infinity\n";
       }
     }
+    if (ManualSkillIndex > 0) {
+      if (battlePP > 0) {
+        battlePP--;
+      } else {
+        msg += "PP is not enough, use simple attack instead\n";
+        ManualSkillIndex = 0;
+      }
+    }
     msg += "It use skill " + _coreAtrribute.skillName[ManualSkillIndex] + "\n";
-
     return attack(this->getsharedptr(), opptr, ManualSkillIndex, msg);
   }
 }

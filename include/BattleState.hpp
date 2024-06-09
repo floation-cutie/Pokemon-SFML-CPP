@@ -25,14 +25,14 @@ private:
   enum battleLayer { Background, Spirits, LayerCount };
 
   TextureHolder mtextures;
-  sf::Text mBattleText;
   SceneNode mSceneGraph;
   GUI::Container mGUIContainer;
   std::array<SceneNode *, LayerCount> mLayers;
   char recvBuf[BUF_LENGTH];
   components::spirits::Pokemon *leftPlayerPokemon, *rightEnemyPokemon;
   BattleController *battle;
-  bool inBattle;
+  bool inBattle;      // 战斗状态
+  bool inBattleState; //战斗界面
   void loadTextures();
   void buildScene();
   void discard();

@@ -21,6 +21,8 @@ Endpoint::Endpoint(int playerID, sqlite3 *db, GameServer &server)
     : playerID(playerID), db(db), server(server) {
   port = 0;
   running = false;
+  pokemonNumIndex = 0;
+  pokemonLevelIndex = 0;
 }
 
 Endpoint::~Endpoint() {
@@ -155,11 +157,11 @@ void Endpoint::listenFunc() {
     // parse command here
 
     auto strs = Helper::split(buf, '\n');
-
-    for (auto str : strs) {
-      cout << "The str is " << str << endl;
-    }
-
+    /*
+        for (auto str : strs) {
+          cout << "The str is " << str << endl;
+        }
+    */
     if (strs.empty()) {
     } else if (strs[0] == "logout") {
       running = false;
@@ -185,6 +187,8 @@ void Endpoint::listenFunc() {
       battle(stoi(strs[2]), stoi(strs[3]), stoi(strs[4]), stoi(strs[5]));
     } else if (strs[0] == "discard" && strs.size() == 2) {
       discard(stoi(strs[1]));
+    } else if (strs[0] == "getUserHonor") {
+      getHonor();
     } else {
       cout << "Endpoint[" << playerID << "]: Invalid request.\n";
       strcpy(buf, "Reject: Invalid request.\n");
@@ -271,6 +275,48 @@ void Endpoint::resetPassword(const string &oldPassword,
 void Endpoint::getPlayerList() {
   strcpy(buf, server.getAllUser().c_str());
   send(connectSocket, buf, BUF_LENGTH, 0);
+}
+
+void Endpoint::getHonor() {
+  // 当有一只15级的精灵时，pokemonLevelIndex = 1,
+  // 有两个及以上时，pokemonLevelIndex = 2
+  // 当有8只及以上的精灵时，pokemonNumIndex = 1, 有16只及以上时，pokemonNumIndex
+  // = 2 将这两个数值传递给客户端
+  char **sqlResult;
+  int nRow;
+  int nColumn;
+  char *errMsg;
+  string sql;
+  sql = "SELECT lv FROM Pokemon where userid=" + to_string(playerID) + ";";
+  if (sqlite3_get_table(db, sql.c_str(), &sqlResult, &nRow, &nColumn,
+                        &errMsg) != SQLITE_OK) {
+    cout << "Endpoint[" << playerID << "]: Sqlite3 error: " << errMsg << endl;
+    cout << "TEST DEBUG" << endl;
+    sqlite3_free(errMsg);
+    strcpy(buf, "Reject: Server error.\n");
+    send(connectSocket, buf, BUF_LENGTH, 0);
+    return;
+  }
+  for (int i = 0; i < nRow; ++i) {
+    if (stoi(sqlResult[1 + i]) >= 15) {
+      // Index到达2为上限
+      if (pokemonLevelIndex < 2) {
+        pokemonLevelIndex++;
+      }
+    }
+  }
+  if (nRow >= 16 + 1) {
+    pokemonNumIndex = 2;
+  } else if (nRow >= 8 + 1) {
+    pokemonNumIndex = 1;
+  } else {
+    pokemonNumIndex = 0;
+  }
+  string result =
+      Honor[pokemonNumIndex] + "\n" + Honor[pokemonLevelIndex] + "\n";
+  strcpy(buf, result.c_str());
+  send(connectSocket, buf, BUF_LENGTH, 0);
+  sqlite3_free_table(sqlResult);
 }
 
 void Endpoint::getPokemonList(int playerID) {
@@ -661,22 +707,28 @@ void Endpoint::discard(int PokemonID) {
     strcpy(buf, "Reject: Server error.\n");
     send(connectSocket, buf, BUF_LENGTH, 0);
   } else {
-    string searchID = sqlResult[1];
-    cout << "DEBUG :: The searched playerID is " << searchID << endl;
-    if (searchID != to_string(playerID)) {
-      strcpy(buf, "The Pokemon is not belong to you...\n");
+    // 如果对应ID的精灵不存在
+    if (nRow == 0) {
+      strcpy(buf, "The Pokemon is not exist...\n");
       send(connectSocket, buf, BUF_LENGTH, 0);
     } else {
-      if (sqlite3_exec(db, sql_delete.c_str(), nonUseCallback, NULL, &errMsg) !=
-          SQLITE_OK) {
-        cout << "Endpoint[" << playerID << "]: Sqlite3 error: " << errMsg
-             << endl;
-        strcpy(buf, errMsg);
-        sqlite3_free(errMsg);
+      string searchID = sqlResult[1];
+      cout << "DEBUG :: The searched playerID is " << searchID << endl;
+      if (searchID != to_string(playerID)) {
+        strcpy(buf, "The Pokemon is not belong to you...\n");
         send(connectSocket, buf, BUF_LENGTH, 0);
       } else {
-        strcpy(buf, "Accept.\n");
-        send(connectSocket, buf, BUF_LENGTH, 0);
+        if (sqlite3_exec(db, sql_delete.c_str(), nonUseCallback, NULL,
+                         &errMsg) != SQLITE_OK) {
+          cout << "Endpoint[" << playerID << "]: Sqlite3 error: " << errMsg
+               << endl;
+          strcpy(buf, errMsg);
+          sqlite3_free(errMsg);
+          send(connectSocket, buf, BUF_LENGTH, 0);
+        } else {
+          strcpy(buf, "Accept.\n");
+          send(connectSocket, buf, BUF_LENGTH, 0);
+        }
       }
     }
   }
