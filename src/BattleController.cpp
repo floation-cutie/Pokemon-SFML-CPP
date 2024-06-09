@@ -21,6 +21,17 @@ BattleController::BattleController(
 
 void BattleController::autoFightFunc() {
   int damage = 0;
+  //对战开始前,接收玩家准备对战的信息
+  if (recv(connectSock, recvBuf, BUF_LENGTH, 0) < 0) {
+    std::cerr << "Error reading from server." << std::endl;
+    close(connectSock); // 正确关闭socket
+    exit(1);
+  }
+  auto strs = Helper::split(recvBuf, '\n');
+  memset(recvBuf, 0, BUF_LENGTH);
+  if (strs[0] != "attack") {
+    std::cout << "ERROR!!!\n";
+  }
   while (true) {
     // ----------  对战逻辑 --------------
     while (timer1 < p1->GetAttackFrequence() &&
