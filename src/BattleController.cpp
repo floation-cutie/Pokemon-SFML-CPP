@@ -244,37 +244,45 @@ bool BattleController::start() {
     }
 
     return true;
-  }
-  // 玩家还不知道自己输了,他尝试继续攻击
-  else {
-    // 服务器一直等待消息到达
-    while (true) {
-      // 使用recv函数从套接字接收数据
-      int bytesReceived = recv(connectSock, recvBuf, BUF_LENGTH, 0);
-      // std::cout << "Waiting." << std::endl;
-      if (bytesReceived < 0) {
-        std::cerr << "Error reading from server." << std::endl;
-        close(connectSock);
+  } else {
+    if (autoFight) {
+      msg = "Lose\n";
+      if (send(connectSock, msg.c_str(), msg.size(), 0) < 0) {
+        std::cerr << "Error writing to server." << std::endl;
+        close(connectSock); // 正确关闭socket
         exit(1);
-      } else if (bytesReceived == 0) {
-        // 如果recv返回0，
+      }
+    } else {
+      // 玩家还不知道自己输了,他尝试继续攻击
+      // 服务器一直等待消息到达
+      while (true) {
+        // 使用recv函数从套接字接收数据
+        int bytesReceived = recv(connectSock, recvBuf, BUF_LENGTH, 0);
         // std::cout << "Waiting." << std::endl;
-      } else {
-        // 正常接收到数据
-        auto strs = Helper::split(std::string(recvBuf), '\n');
-        if (strs[0] == "attack") {
-          std::cout
-              << "THE PLayer has lose, but he knows he lose only when he try "
-                 "to attack one more time\n";
-          msg = "Lose\n";
-          if (send(connectSock, msg.c_str(), msg.size(), 0) < 0) {
-            std::cerr << "Error writing to server." << std::endl;
-            close(connectSock); // 正确关闭socket
-            exit(1);
+        if (bytesReceived < 0) {
+          std::cerr << "Error reading from server." << std::endl;
+          close(connectSock);
+          exit(1);
+        } else if (bytesReceived == 0) {
+          // 如果recv返回0，
+          // std::cout << "Waiting." << std::endl;
+        } else {
+          // 正常接收到数据
+          auto strs = Helper::split(std::string(recvBuf), '\n');
+          if (strs[0] == "attack") {
+            std::cout
+                << "THE PLayer has lose, but he knows he lose only when he try "
+                   "to attack one more time\n";
+            msg = "Lose\n";
+            if (send(connectSock, msg.c_str(), msg.size(), 0) < 0) {
+              std::cerr << "Error writing to server." << std::endl;
+              close(connectSock); // 正确关闭socket
+              exit(1);
+            }
           }
+          memset(recvBuf, 0, BUF_LENGTH);
+          break;
         }
-        memset(recvBuf, 0, BUF_LENGTH);
-        break;
       }
     }
   }

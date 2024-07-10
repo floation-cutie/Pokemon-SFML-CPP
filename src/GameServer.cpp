@@ -25,7 +25,12 @@ GameServer::~GameServer() {
     endpoints.pop_back();
   }
   mtx.unlock();
-
+  /*
+   * jthread会自动在解构函数中调用join()函数
+  for (auto &th : pool) {
+    th.join();
+  }
+  */
   close(serverSocket); // if socket has been closed, return WSAENOTSOCK, but
                        // that's ok
   close(connectSocket);

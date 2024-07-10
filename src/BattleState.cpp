@@ -61,26 +61,33 @@ void BattleState::discard() {
                              3 * windowSize.y / 4.f + 50);
   discardButton->setText("Ready to discard");
   discardButton->setCallback([=, this]() {
-    std::string buf = "discard\n" + discardInputField->getText() + "\n";
-    if (send(connect_sock, buf.c_str(), BUF_LENGTH, 0) < 0) {
-      std::cerr << "Error writing to server." << std::endl;
-      close(connect_sock); // 正确关闭socket
-      exit(1);
-    }
-    memset(recvBuf, 0, BUF_LENGTH);
-    if (recv(connect_sock, recvBuf, BUF_LENGTH, 0) < 0) {
-      std::cerr << "Error receive message from server" << std::endl;
-      close(connect_sock);
-      exit(1);
-    }
-    auto strs = Helper::split(std::string(recvBuf), '\n');
-    if (strs[0] == "Accept.") {
-      discardLabel->setColor(sf::Color::Green);
-      discardLabel->setText("Discard successfully!");
-      inBattleState = false;
-    } else {
+    int discardId = Helper::isValidPort(discardInputField->getText().c_str());
+    if (discardId == -1) {
       discardLabel->setColor(sf::Color::Red);
-      discardLabel->setText("Discard failed!");
+      discardLabel->setText("Invalid id!");
+      return;
+    } else {
+      std::string buf = "discard\n" + discardInputField->getText() + "\n";
+      if (send(connect_sock, buf.c_str(), BUF_LENGTH, 0) < 0) {
+        std::cerr << "Error writing to server." << std::endl;
+        close(connect_sock); // 正确关闭socket
+        exit(1);
+      }
+      memset(recvBuf, 0, BUF_LENGTH);
+      if (recv(connect_sock, recvBuf, BUF_LENGTH, 0) < 0) {
+        std::cerr << "Error receive message from server" << std::endl;
+        close(connect_sock);
+        exit(1);
+      }
+      auto strs = Helper::split(std::string(recvBuf), '\n');
+      if (strs[0] == "Accept.") {
+        discardLabel->setColor(sf::Color::Green);
+        discardLabel->setText("Discard successfully!");
+        inBattleState = false;
+      } else {
+        discardLabel->setColor(sf::Color::Red);
+        discardLabel->setText("Discard failed!");
+      }
     }
   });
 

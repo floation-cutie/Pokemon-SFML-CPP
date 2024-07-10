@@ -1,7 +1,7 @@
-对于SFML图形库的学习整体参考SFML开发者撰写的<<SFML GAME DEVELOPMENT BOOK>> 和SFML官方文档
+于SFML图形库的学习整体参考SFML开发者撰写的 SFML GAME DEVELOPMENT BOOK 和SFML官方文档
 此为一个公开的[网络链接](https://miphworld.ru/wp-content/uploads/Books/%D0%9F%D1%80%D0%BE%D0%B3%D1%80%D0%B0%D0%BC%D0%BC%D0%B8%D1%80%D0%BE%D0%B2%D0%B0%D0%BD%D0%B8%D0%B5/SFML%20Game%20Development.pdf)
 
-**** game loop
+#### game loop
 To make the movement *frame-independent*, we shouldn't just add a distance vector directly.
 Instead, we reuse the *distance = speed * Delta.asTime()*. Obviously, the speed should revelant to how many pixels it travels per second.
 
@@ -16,7 +16,7 @@ that cause the frame "chases" the real time
 adapts the rate of graphical update rate to the refresh rate of the monitor(not fixed)
 
 
-**** Real-time rendering
+#### Real-time rendering
 
 Some programs use a render-on-demand approach, minimizing the performance cost,which is not natural.
 But this approach is actually redundant, as we request new frames all the time.
@@ -32,7 +32,7 @@ Now the game always render again and again, independently of what changed since 
 and the front buffer previously will be the back buffer to draw on.
 So we won't be entrapped into concerning whether the front buffer is destoryed..
 
-*** Resource management
+### Resource management
 
 load a texture && display a sprite over and over again
 
@@ -48,7 +48,7 @@ or artificial intelligence are also considered resources.
 `bool loadFromFile (const std::string& filename);` 
 `bool loadFromMemory()` `bool loadFromStream()` 
 
-****texture
+#### texture
 
 **it is stored as an array of pixels in the graphics card's video memory, not reside in the RAM**
 texture represents a graphical image, and the sprite can have multiple mapping to the same texture
@@ -56,23 +56,23 @@ while the texture itself is not affected.
 Why we choose to separate the sprite and texture?? 
 We have a simple possibility to deal with graphics using `sf::Sprite`,while the heavyweight `sf::Texture` need not be modified.
 
-****Images
+#### Images
 stores in the RAM Instead of the video memory,can manipulate single pixels 
 
 ==Texture use intermediate Images==
 
-**** Fonts
+#### Fonts
 fonts -> text
 **** Shaders
 着色器apply effects to rendered objects, building on OpenGL,whose instance use GLSL
 
-****Audio
+#### Audio
 What is sound effects and background music? 音效 和 背景乐
 
 the former one is appropriate for short segments(explosions, button clicks and so on...)
 the latter are designed to handle music themes.They stays longer and require more memory.
 
-*****Sound Buffers
+##### Sound Buffers
 Sound buffer holds an array of 16 bit audio of sample,but can't play audio.
 
 Sound refers to a sound buffer containing the audio samples.
@@ -80,18 +80,18 @@ Sound refers to a sound buffer containing the audio samples.
 `sf::Sound` use `sf::SoundBuffer`, and during its life time the sound buffers must remain alive.
 
 
-****Try
+#### Try
 
 decide How long and by whom those resources are used : preload the resources
 so we need use a Resource Identifier ,we recommend use enumerator instead of hardcoding strings
 
 `std::map` performed as associative container is the good choice to store Resource
 
-***** RAII design and generalization
+##### RAII design and generalization
 
-*****Error handling
+##### Error handling
 
-***Different entity design
+### Different entity design
 1. Class hierarchy, requiring virtual inheritance
 2. component-based design
 
@@ -136,7 +136,7 @@ Trade off: To use events or real-time input? 二选一
 
 构造函数对象代替普通的函数指针--> std::function<> action; 
 
-***定义状态 -- Game Flow的迁移
+### 定义状态 -- Game Flow的迁移
 我们可以将状态视为游戏软件中的独立屏幕
 
 VideoState --> title screen --> main menu (some state may work in parallel)
@@ -150,14 +150,14 @@ VideoState --> title screen --> main menu (some state may work in parallel)
 
 状态本身可以发送push pop请求, 管理的栈进行实际push pop 操作
 
-****状态转移的延迟操作
+#### 状态转移的延迟操作
 向一个正在更新或渲染的状态栈(即正处于迭代中)进行元素的删除和添加,会导致迭代器失效,从而产生矛盾
 
 故而将request信号填入pending队列中
 
 维护状态上下文,作为所有状态之间的共享对象的所有者,避免内存浪费
 
-***扩展游戏--> 应用
+### 扩展游戏--> 应用
 
 构建Application Class 在菜单页面提供用户登录和注册能力
 
@@ -169,7 +169,7 @@ VideoState --> title screen --> main menu (some state may work in parallel)
 
 我们要保证多个线程轮流对共享数据进行操作,进行**锁**操作
 
-***设计GUI层次结构 hierarchy
+### 设计GUI层次结构 hierarchy
 sfml借鉴了Java中很多工具包的设计思路,但"without pumping the state full of boilerplate GUI code"
 
 构造基本组件 component 在GUI的命名空间中
@@ -178,7 +178,7 @@ sfml借鉴了Java中很多工具包的设计思路,但"without pumping the state
 
 5.17 解决了从this指针扩展到共享指针的资源丢失问题
 
-*** multiPlayer
+### multiPlayer
 多人游戏范畴包含 本地合作 和 实际互联网游戏
 
 实际关注的场景为socket编程网络通信

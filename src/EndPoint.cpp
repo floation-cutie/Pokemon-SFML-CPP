@@ -544,7 +544,7 @@ string Endpoint::chooseBet() {
   }
 
   // 从中随机选择三个id，若不足三个则返回所有id，格式为”id1\nid2\nid3\n“
-  int count = nRow - 1;
+  int count = nRow;
   if (count >= 3) {
     int index1 = rand() % count + 1;
     int index2 = rand() % count + 1;
@@ -744,7 +744,7 @@ void Endpoint::discard(int PokemonID) {
     send(connectSocket, buf, BUF_LENGTH, 0);
     return;
   }
-  if (nRow == 1) {
+  if (nRow == 0) {
     // add pokemons for user
     int Index = rand() % 4;
     auto t = make_shared<components::spirits::Pokemon>(
